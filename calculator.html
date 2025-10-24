@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Финансовый калькулятор (Шаг 1)</title>
+    <style>
+        body {
+            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: grid;
+            place-items: center;
+            min-height: 90vh;
+            background-color: #f4f7f6;
+            color: #333;
+            background-image: url('pexels-eberhardgross-1612367.jpg');
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+        .calculator {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+            padding: 28px;
+            width: 450px;
+            margin-top: auto;
+        }
+        .student-info {
+            font-size: 0.9em;
+            color: #777;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+            font-family: 'Montserrat';
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 400;
+            font-size: 1.1em;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.1em;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box; /* Важно для padding */
+            font-family: 'Montserrat';
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            font-size: 1.1em;
+            font-weight: 700;
+            color: #fff;
+            background-color: #8c401f;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-family: 'Montserrat';
+        }
+        button:active {
+            background-color: #5c2e1a;
+        }
+        #result-container {
+            margin-top: 20px;
+            font-size: 1.1em;
+            font-weight: 400;
+            color: #333;
+            min-height: 1.5em;
+            word-wrap: break-word;
+            background-color: rgba(140, 64, 31, 0.1);
+            padding: 10px;
+            border-radius: 6px;
+
+        }
+        .error {
+            color: #d93025;
+            font-size: 0.8em;
+            margin-top: 5px;
+            min-height: 1.3em;
+        }
+        h2{
+            margin-top: 0px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="calculator">
+        <h2>Калькулятор больших чисел</h2>
+
+        <div class="form-group">
+            <input type="text" id="num1" placeholder="Число 1">
+            <div id="error1" class="error"></div>
+        </div>
+
+        <div class="form-group">
+            <!-- <label for="operation">Операция:</label> -->
+            <select id="operation">
+                <option value="add">+</option>
+                <option value="subtract">-</option>
+            </select>
+            <!-- TODO -->
+            <div class="error"></div>
+        </div>
+
+        <div class="form-group">
+            <input type="text" id="num2" placeholder="Число 2">
+            <div id="error2" class="error"></div>
+        </div>
+
+        <button id="calculateBtn">Вычислить</button>
+
+        <div class="form-group res">
+            <label style="margin-top: 20px; margin-bottom: -10px;">Результат:</label>
+            <div id="result-container"></div>
+            <div id="errorResult" class="error"></div>
+        </div>
+
+        <div class="student-info">
+            Кулагина Полина Владиславовна
+            <br>Курс 4, группа 4
+            <br>2025
+        </div>
+    </div>
+
+    <script>
+        // --- Константы ---
+        
+        // Масштаб: 6 знаков после запятой
+        const SCALE = 6;
+        const SCALE_BI = 10n ** BigInt(SCALE); // 1_000_000n
+        
+        // Диапазон: ± 1 000 000 000 000 (Триллион)
+        // Внутреннее представление: 1_000_000_000_000 * 1_000_000 = 1_000_000_000_000_000_000n
+        const MAX_ABS_VALUE = 1000000000000000000n; 
+
+        // --- Элементы DOM ---
+        const num1Input = document.getElementById('num1');
+        const num2Input = document.getElementById('num2');
+        const operationSelect = document.getElementById('operation');
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultContainer = document.getElementById('result-container');
+        
+        const error1 = document.getElementById('error1');
+        const error2 = document.getElementById('error2');
+        const errorResult = document.getElementById('errorResult');
+
+        // --- Основная логика ---
+
+        calculateBtn.addEventListener('click', () => {
+            // 1. Очистка старых ошибок
+            clearErrors();
+            resultContainer.textContent = '';
+
+            try {
+                // 2. Получение и парсинг входных данных
+                const str1 = num1Input.value;
+                const str2 = num2Input.value;
+                const operation = operationSelect.value;
+                
+                const val1 = parseToScaledBigInt(str1, error1);
+                const val2 = parseToScaledBigInt(str2, error2);
+
+                // Если парсинг не удался, val1 или val2 будут null
+                if (val1 === null || val2 === null) {
+                    return; 
+                }
+
+                // 3. Выполнение операции
+                let resultBigInt;
+                if (operation === 'add') {
+                    resultBigInt = val1 + val2;
+                } else if (operation === 'subtract') {
+                    resultBigInt = val1 - val2;
+                }
+                
+                // 4. Проверка результата на переполнение
+                if (resultBigInt > MAX_ABS_VALUE || resultBigInt < -MAX_ABS_VALUE) {
+                    throw new Error("Переполнение результата");
+                }
+
+                // 5. Форматирование и вывод результата
+                resultContainer.textContent = formatFromScaledBigInt(resultBigInt);
+
+            } catch (error) {
+                errorResult.textContent = error.message;
+            }
+        });
+
+        /**
+         * Парсит строку в BigInt, масштабированный на 10^SCALE.
+         * @param {string} str - Входная строка (например, "123.45" или "123,45")
+         * @param {HTMLElement} errorElement - Элемент для вывода ошибки
+         * @returns {BigInt | null} - Масштабированный BigInt или null при ошибке
+         */
+        function parseToScaledBigInt(str, errorElement) {
+            let input = str.trim();
+            
+            // Требование: Не принимать экспоненциальную нотацию
+            if (input.includes('e') || input.includes('E')) {
+                errorElement.textContent = "Экспоненциальная запись не поддерживается";
+                return null;
+            }
+            
+            // Требование: Принимать и точку, и запятую
+            input = input.replace(',', '.');
+
+            // Проверка на допустимые символы (цифры, один минус в начале, одна точка)
+            if (!/^-?\d*(\.\d*)?$/.test(input)) {
+                errorElement.textContent = "Некорректный формат числа";
+                return null;
+            }
+            // Проверка, что это не просто "-"
+            if (input === "-" || input === ".") {
+                errorElement.textContent = "Некорректный формат числа";
+                return null;
+            }
+
+            // Определение знака
+            const isNegative = input.startsWith('-');
+            if (isNegative) {
+                input = input.substring(1); // Убираем минус
+            }
+
+            // Разделение на целую и дробную часть
+            let [integerPart, fractionalPart] = input.split('.');
+
+            if (integerPart === "" && fractionalPart === undefined) {
+                errorElement.textContent = "Некорректный формат числа";
+                return null;
+            }
+
+            integerPart = integerPart || '0';
+            
+            // Обработка дробной части (берем только 6 знаков)
+            fractionalPart = (fractionalPart || '').substring(0, SCALE).padEnd(SCALE, '0');
+            
+            // Соединяем в одну строку
+            const fullNumStr = integerPart + fractionalPart;
+            let value = BigInt(fullNumStr);
+
+            // Проверка на входе (уже после парсинга)
+            if (value > MAX_ABS_VALUE) {
+                errorElement.textContent = "Число превышает диапазон (1 трлн)";
+                return null;
+            }
+
+            if (isNegative) {
+                value = -value;
+            }
+            
+            return value;
+        }
+
+        /**
+         * Форматирует масштабированный BigInt обратно в строку.
+         * @param {BigInt} value - Масштабированный BigInt
+         * @returns {string} - Отформатированная строка (_например_, "123.45")
+         */
+        function formatFromScaledBigInt(value) {
+            const isNegative = value < 0n;
+            let absValueStr = (isNegative ? -value : value).toString();
+
+            // Дополняем нулями слева, если число < 1 (например, 0.000001 -> "1")
+            absValueStr = absValueStr.padStart(SCALE + 1, '0');
+
+            let integerPart = absValueStr.slice(0, -SCALE);
+            let fractionalPart = absValueStr.slice(-SCALE);
+
+            // Убираем незначащие нули в дробной части
+            fractionalPart = fractionalPart.replace(/0+$/, '');
+
+            const sign = isNegative ? '-' : '';
+
+            if (fractionalPart.length === 0) {
+                return sign + integerPart;
+            } else {
+                return sign + integerPart + '.' + fractionalPart;
+            }
+        }
+
+        /**
+         * Очищает все сообщения об ошибках.
+         */
+        function clearErrors() {
+            error1.textContent = '';
+            error2.textContent = '';
+            errorResult.textContent = '';
+        }
+
+    </script>
+</body>
+</html>
