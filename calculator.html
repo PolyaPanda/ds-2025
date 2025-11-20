@@ -4,7 +4,7 @@
     <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Финансовый калькулятор (Шаг 1)</title>
+    <title>Финансовый калькулятор (Шаг 2)</title>
     <style>
         body {
             font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -48,7 +48,7 @@
             font-size: 1.1em;
             border: 1px solid #ddd;
             border-radius: 6px;
-            box-sizing: border-box; /* Важно для padding */
+            box-sizing: border-box;
             font-family: 'Montserrat';
         }
         button {
@@ -77,7 +77,6 @@
             background-color: rgba(140, 64, 31, 0.1);
             padding: 10px;
             border-radius: 6px;
-
         }
         .error {
             color: #d93025;
@@ -85,7 +84,7 @@
             margin-top: 5px;
             min-height: 1.3em;
         }
-        h2{
+        h2 {
             margin-top: 0px;
         }
     </style>
@@ -101,12 +100,12 @@
         </div>
 
         <div class="form-group">
-            <!-- <label for="operation">Операция:</label> -->
             <select id="operation">
-                <option value="add">+</option>
-                <option value="subtract">-</option>
+                <option value="add">Сложение (+)</option>
+                <option value="subtract">Вычитание (-)</option>
+                <option value="multiply">Умножение (*)</option>
+                <option value="divide">Деление (/)</option>
             </select>
-            <!-- TODO -->
             <div class="error"></div>
         </div>
 
@@ -132,13 +131,10 @@
 
     <script>
         // --- Константы ---
-        
-        // Масштаб: 6 знаков после запятой
         const SCALE = 6;
-        const SCALE_BI = 10n ** BigInt(SCALE); // 1_000_000n
+        const SCALE_BI = 10n ** BigInt(SCALE); // 1 000 000
         
-        // Диапазон: ± 1 000 000 000 000 (Триллион)
-        // Внутреннее представление: 1_000_000_000_000 * 1_000_000 = 1_000_000_000_000_000_000n
+        // Диапазон: ± 1 трлн
         const MAX_ABS_VALUE = 1000000000000000000n; 
 
         // --- Элементы DOM ---
@@ -153,14 +149,11 @@
         const errorResult = document.getElementById('errorResult');
 
         // --- Основная логика ---
-
         calculateBtn.addEventListener('click', () => {
-            // 1. Очистка старых ошибок
             clearErrors();
             resultContainer.textContent = '';
 
             try {
-                // 2. Получение и парсинг входных данных
                 const str1 = num1Input.value;
                 const str2 = num2Input.value;
                 const operation = operationSelect.value;
@@ -168,25 +161,32 @@
                 const val1 = parseToScaledBigInt(str1, error1);
                 const val2 = parseToScaledBigInt(str2, error2);
 
-                // Если парсинг не удался, val1 или val2 будут null
-                if (val1 === null || val2 === null) {
-                    return; 
-                }
+                if (val1 === null || val2 === null) return;
 
-                // 3. Выполнение операции
                 let resultBigInt;
-                if (operation === 'add') {
-                    resultBigInt = val1 + val2;
-                } else if (operation === 'subtract') {
-                    resultBigInt = val1 - val2;
+
+                switch (operation) {
+                    case 'add':
+                        resultBigInt = val1 + val2;
+                        break;
+                    case 'subtract':
+                        resultBigInt = val1 - val2;
+                        break;
+                    case 'multiply':
+                        resultBigInt = divideAndRound(val1 * val2, SCALE_BI);
+                        break;
+                    case 'divide':
+                        if (val2 === 0n) {
+                            throw new Error("Деление на ноль невозможно");
+                        }
+                        resultBigInt = divideAndRound(val1 * SCALE_BI, val2);
+                        break;
                 }
                 
-                // 4. Проверка результата на переполнение
                 if (resultBigInt > MAX_ABS_VALUE || resultBigInt < -MAX_ABS_VALUE) {
                     throw new Error("Переполнение результата");
                 }
 
-                // 5. Форматирование и вывод результата
                 resultContainer.textContent = formatFromScaledBigInt(resultBigInt);
 
             } catch (error) {
@@ -194,87 +194,89 @@
             }
         });
 
-        /**
-         * Парсит строку в BigInt, масштабированный на 10^SCALE.
-         * @param {string} str - Входная строка (например, "123.45" или "123,45")
-         * @param {HTMLElement} errorElement - Элемент для вывода ошибки
-         * @returns {BigInt | null} - Масштабированный BigInt или null при ошибке
-         */
+        
+        function divideAndRound(dividend, divisor) {
+            const sign = (dividend < 0n) !== (divisor < 0n) ? -1n : 1n;
+            let num = dividend < 0n ? -dividend : dividend;
+            let den = divisor < 0n ? -divisor : divisor;
+
+           
+            let quotient = num / den;
+            let remainder = num % den;
+
+            if (remainder * 2n >= den) {
+                quotient += 1n;
+            }
+
+            return sign * quotient;
+        }
+
         function parseToScaledBigInt(str, errorElement) {
             let input = str.trim();
             
-            // Требование: Не принимать экспоненциальную нотацию
-            if (input.includes('e') || input.includes('E')) {
-                errorElement.textContent = "Экспоненциальная запись не поддерживается";
-                return null;
-            }
-            
-            // Требование: Принимать и точку, и запятую
-            input = input.replace(',', '.');
-
-            // Проверка на допустимые символы (цифры, один минус в начале, одна точка)
-            if (!/^-?\d*(\.\d*)?$/.test(input)) {
-                errorElement.textContent = "Некорректный формат числа";
-                return null;
-            }
-            // Проверка, что это не просто "-"
-            if (input === "-" || input === ".") {
-                errorElement.textContent = "Некорректный формат числа";
+            if (!input) {
+                errorElement.textContent = "Поле не может быть пустым";
                 return null;
             }
 
-            // Определение знака
+            const strictRegex = /^-?(?:(\d{1,3}(?: \d{3})*)|(\d+))([.,]\d+)?$/;
+
+            if (!strictRegex.test(input)) {
+                // Дополнительная проверка для уточнения ошибки пользователю
+                if (/[a-zA-Z]/.test(input)) {
+                    errorElement.textContent = "Ввод букв запрещен";
+                } else if (input.includes('e') || input.includes('E')) {
+                    errorElement.textContent = "Экспоненциальная запись запрещена";
+                } else {
+                    errorElement.textContent = "Некорректный формат (проверьте пробелы)";
+                }
+                return null;
+            }
+
+            input = input.replace(/\s/g, '').replace(',', '.');
+
+            // Проверка на "странные" минусы внутри (на всякий случай, хотя regex выше это ловит)
+            if (input.lastIndexOf('-') > 0) {
+                 errorElement.textContent = "Некорректный формат";
+                 return null;
+            }
+
             const isNegative = input.startsWith('-');
-            if (isNegative) {
-                input = input.substring(1); // Убираем минус
-            }
+            if (isNegative) input = input.substring(1);
 
-            // Разделение на целую и дробную часть
             let [integerPart, fractionalPart] = input.split('.');
-
-            if (integerPart === "" && fractionalPart === undefined) {
-                errorElement.textContent = "Некорректный формат числа";
-                return null;
-            }
-
             integerPart = integerPart || '0';
-            
-            // Обработка дробной части (берем только 6 знаков)
             fractionalPart = (fractionalPart || '').substring(0, SCALE).padEnd(SCALE, '0');
             
-            // Соединяем в одну строку
             const fullNumStr = integerPart + fractionalPart;
+            
+            // Грубая проверка длины строки перед BigInt (13 целых + 6 дробных = 19)
+            if (fullNumStr.length > 20) { // С запасом, точная проверка ниже
+                 errorElement.textContent = "Число слишком большое";
+                 return null;
+            }
+
             let value = BigInt(fullNumStr);
 
-            // Проверка на входе (уже после парсинга)
             if (value > MAX_ABS_VALUE) {
-                errorElement.textContent = "Число превышает диапазон (1 трлн)";
-                return null;
+                 errorElement.textContent = "Число превышает диапазон (1 трлн)";
+                 return null;
             }
 
-            if (isNegative) {
-                value = -value;
-            }
-            
-            return value;
+            return isNegative ? -value : value;
         }
 
-        /**
-         * Форматирует масштабированный BigInt обратно в строку.
-         * @param {BigInt} value - Масштабированный BigInt
-         * @returns {string} - Отформатированная строка (_например_, "123.45")
-         */
         function formatFromScaledBigInt(value) {
             const isNegative = value < 0n;
             let absValueStr = (isNegative ? -value : value).toString();
 
-            // Дополняем нулями слева, если число < 1 (например, 0.000001 -> "1")
             absValueStr = absValueStr.padStart(SCALE + 1, '0');
 
             let integerPart = absValueStr.slice(0, -SCALE);
             let fractionalPart = absValueStr.slice(-SCALE);
 
-            // Убираем незначащие нули в дробной части
+            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+
             fractionalPart = fractionalPart.replace(/0+$/, '');
 
             const sign = isNegative ? '-' : '';
@@ -286,15 +288,11 @@
             }
         }
 
-        /**
-         * Очищает все сообщения об ошибках.
-         */
         function clearErrors() {
             error1.textContent = '';
             error2.textContent = '';
             errorResult.textContent = '';
         }
-
     </script>
 </body>
 </html>
