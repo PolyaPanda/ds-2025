@@ -1,125 +1,187 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Финансовый калькулятор (Шаг 2)</title>
-    <style>
-        body {
-            font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            display: grid;
-            place-items: center;
-            min-height: 90vh;
-            background-color: #f4f7f6;
-            color: #333;
-            background-image: url('pexels-eberhardgross-1612367.jpg');
-            background-repeat: no-repeat;
-            background-size: cover;
-        }
-        .calculator {
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-            padding: 28px;
-            width: 450px;
-            margin-top: auto;
-        }
-        .student-info {
-            font-size: 0.9em;
-            color: #777;
-            border-top: 1px solid #eee;
-            padding-top: 15px;
-        }
-        .form-group {
-            margin-bottom: 10px;
-            font-family: 'Montserrat';
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 400;
-            font-size: 1.1em;
-        }
-        .form-group input,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            font-size: 1.1em;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-            font-family: 'Montserrat';
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            font-size: 1.1em;
-            font-weight: 700;
-            color: #fff;
-            background-color: #8c401f;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            font-family: 'Montserrat';
-        }
-        button:active {
-            background-color: #5c2e1a;
-        }
-        #result-container {
-            margin-top: 20px;
-            font-size: 1.1em;
-            font-weight: 400;
-            color: #333;
-            min-height: 1.5em;
-            word-wrap: break-word;
-            background-color: rgba(140, 64, 31, 0.1);
-            padding: 10px;
-            border-radius: 6px;
-        }
-        .error {
-            color: #d93025;
-            font-size: 0.8em;
-            margin-top: 5px;
-            min-height: 1.3em;
-        }
-        h2 {
-            margin-top: 0px;
-        }
-    </style>
-</head>
-<body>
+    <!DOCTYPE html>
+    <html lang="ru">
+    <head>
+        <link href='https://fonts.googleapis.com/css?family=Montserrat' rel='stylesheet'>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Финансовый калькулятор (Шаг 3: 4 операнда и приоритеты)</title>
+        <style>
+            body {
+                font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                display: grid;
+                place-items: center;
+                min-height: 90vh;
+                background-color: #f4f7f6;
+                color: #333;
+                background-image: url('pexels-eberhardgross-1612367.jpg');
+                background-repeat: no-repeat;
+                background-size: cover;
+            }
+            .calculator {
+                background-color: #ffffff;
+                border-radius: 12px;
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+                padding: 28px;
+                width: 480px;
+                margin: 20px auto;
+            }
+            .student-info {
+                font-size: 0.9em;
+                color: #777;
+                border-top: 1px solid #eee;
+                padding-top: 15px;
+            }
+            .form-group {
+                margin-bottom: 10px;
+                font-family: 'Montserrat';
+                display: flex;
+                align-items: center;
+            }
+            .form-group.res {
+                display: block;
+            }
+            .form-group.res label {
+                margin-top: 20px;
+            }
+            .form-group label {
+                display: block;
+                margin-bottom: 8px;
+                font-weight: 400;
+                font-size: 1.1em;
+            }
+            .operand-input {
+                flex-grow: 1;
+            }
+            .op-select {
+                width: 70px;
+                margin: 0 10px;
+            }
+            input, select {
+                padding: 10px;
+                font-size: 1.1em;
+                border: 1px solid #ddd;
+                border-radius: 6px;
+                box-sizing: border-box;
+                font-family: 'Montserrat';
+            }
+            button {
+                width: 100%;
+                padding: 12px;
+                font-size: 1.1em;
+                font-weight: 700;
+                color: #fff;
+                background-color: #8c401f;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: background-color 0.2s;
+                font-family: 'Montserrat';
+            }
+            button:active {
+                background-color: #5c2e1a;
+            }
+            #result-container {
+                margin-top: 20px;
+                font-size: 1.1em;
+                font-weight: 400;
+                color: #333;
+                min-height: 1.5em;
+                word-wrap: break-word;
+                background-color: rgba(140, 64, 31, 0.1);
+                padding: 10px;
+                border-radius: 6px;
+            }
+            #rounded-result-container {
+                font-size: 1.2em;
+                font-weight: 700;
+                color: #5c2e1a;
+                margin-top: 10px;
+                background-color: rgba(140, 64, 31, 0.2);
+                padding: 10px;
+                border-radius: 6px;
+            }
+            .error {
+                color: #d93025;
+                font-size: 0.8em;
+                margin-top: 5px;
+                min-height: 1.3em;
+            }
+            h2 { margin-top: 0px; }
+        </style>
+    </head>
+    <body>
 
-    <div class="calculator">
-        <h2>Калькулятор больших чисел</h2>
+        <div class="calculator">
+        <h2>Калькулятор приоритетов</h2>
+        
 
         <div class="form-group">
-            <input type="text" id="num1" placeholder="Число 1">
-            <div id="error1" class="error"></div>
+            <input type="text" id="num1" class="operand-input" placeholder="Операнд 1" value="0">
         </div>
+        <div id="error1" class="error"></div>
 
         <div class="form-group">
-            <select id="operation">
-                <option value="add">Сложение (+)</option>
-                <option value="subtract">Вычитание (-)</option>
-                <option value="multiply">Умножение (*)</option>
-                <option value="divide">Деление (/)</option>
+            <select id="op1" class="op-select">
+                <option value="add" selected>+</option>
+                <option value="subtract">-</option>
+                <option value="multiply">*</option>
+                <option value="divide">/</option>
             </select>
             <div class="error"></div>
         </div>
 
-        <div class="form-group">
-            <input type="text" id="num2" placeholder="Число 2">
-            <div id="error2" class="error"></div>
+        <div class="form-group" style="background-color: #f0f8ff; padding: 5px; border-radius: 5px;">
+            <input type="text" id="num2" class="operand-input" placeholder="Операнд 2" value="0">
         </div>
+        <div id="error2" class="error"></div>
+
+        <div class="form-group" style="background-color: #f0f8ff; padding: 5px; border-radius: 5px;">
+            <select id="op2" class="op-select">
+                <option value="add" selected>+</option>
+                <option value="subtract">-</option>
+                <option value="multiply">*</option>
+                <option value="divide">/</option>
+            </select>
+            <div class="error"></div>
+        </div>
+        
+        <div class="form-group" style="background-color: #f0f8ff; padding: 5px; border-radius: 5px;">
+            <input type="text" id="num3" class="operand-input" placeholder="Операнд 3" value="0">
+        </div>
+        <div id="error3" class="error"></div>
+
+        <div class="form-group">
+            <select id="op3" class="op-select">
+                <option value="add" selected>+</option>
+                <option value="subtract">-</option>
+                <option value="multiply">*</option>
+                <option value="divide">/</option>
+            </select>
+            <div class="error"></div>
+        </div>
+        
+        <div class="form-group">
+            <input type="text" id="num4" class="operand-input" placeholder="Операнд 4" value="0">
+        </div>
+        <div id="error4" class="error"></div>
 
         <button id="calculateBtn">Вычислить</button>
 
         <div class="form-group res">
-            <label style="margin-top: 20px; margin-bottom: -10px;">Результат:</label>
+            <label>Итоговый результат (10 знаков):</label>
             <div id="result-container"></div>
             <div id="errorResult" class="error"></div>
+        </div>
+
+        <div class="form-group res">
+            <label for="rounding-method">Выбор округления до целых:</label>
+            <select id="rounding-method">
+                <option value="mathematical">Математическое</option>
+                <option value="bankers">Бухгалтерское</option>
+                <option value="truncate">Усечение</option>
+            </select>
+            <label style="margin-top: 10px;">Округленное значение:</label>
+            <div id="rounded-result-container"></div>
         </div>
 
         <div class="student-info">
@@ -128,79 +190,39 @@
             <br>2025
         </div>
     </div>
-
     <script>
-        // --- Константы ---
-        const SCALE = 6;
-        const SCALE_BI = 10n ** BigInt(SCALE); // 1 000 000
+        const SCALE = 10;
+        const SCALE_BI = 10n ** BigInt(SCALE); // 10 000 000 000
         
-        // Диапазон: ± 1 трлн
-        const MAX_ABS_VALUE = 1000000000000000000n; 
+        // Диапазон: ± 1 000 000 000 000.0000000000 (12 целых + 10 дробных)
+        // Максимальное внутреннее значение = 10^12 * 10^10 = 10^22 (1 и 22 нуля)
+        const MAX_ABS_VALUE = 10n ** 22n; 
 
-        // --- Элементы DOM ---
-        const num1Input = document.getElementById('num1');
-        const num2Input = document.getElementById('num2');
-        const operationSelect = document.getElementById('operation');
-        const calculateBtn = document.getElementById('calculateBtn');
+        const numInputs = ['num1', 'num2', 'num3', 'num4'].map(id => document.getElementById(id));
+        const opSelects = ['op1', 'op2', 'op3'].map(id => document.getElementById(id));
+        const errorElements = ['error1', 'error2', 'error3', 'error4'].map(id => document.getElementById(id));
+        const roundingMethodSelect = document.getElementById('rounding-method');
         const resultContainer = document.getElementById('result-container');
-        
-        const error1 = document.getElementById('error1');
-        const error2 = document.getElementById('error2');
+        const roundedResultContainer = document.getElementById('rounded-result-container');
+        const calculateBtn = document.getElementById('calculateBtn');
         const errorResult = document.getElementById('errorResult');
-
-        // --- Основная логика ---
-        calculateBtn.addEventListener('click', () => {
-            clearErrors();
-            resultContainer.textContent = '';
-
-            try {
-                const str1 = num1Input.value;
-                const str2 = num2Input.value;
-                const operation = operationSelect.value;
-                
-                const val1 = parseToScaledBigInt(str1, error1);
-                const val2 = parseToScaledBigInt(str2, error2);
-
-                if (val1 === null || val2 === null) return;
-
-                let resultBigInt;
-
-                switch (operation) {
-                    case 'add':
-                        resultBigInt = val1 + val2;
-                        break;
-                    case 'subtract':
-                        resultBigInt = val1 - val2;
-                        break;
-                    case 'multiply':
-                        resultBigInt = divideAndRound(val1 * val2, SCALE_BI);
-                        break;
-                    case 'divide':
-                        if (val2 === 0n) {
-                            throw new Error("Деление на ноль невозможно");
-                        }
-                        resultBigInt = divideAndRound(val1 * SCALE_BI, val2);
-                        break;
-                }
-                
-                if (resultBigInt > MAX_ABS_VALUE || resultBigInt < -MAX_ABS_VALUE) {
-                    throw new Error("Переполнение результата");
-                }
-
-                resultContainer.textContent = formatFromScaledBigInt(resultBigInt);
-
-            } catch (error) {
-                errorResult.textContent = error.message;
-            }
-        });
-
         
+        let finalResultBigInt = 0n;
+
+        function clearErrors() {
+            errorResult.textContent = '';
+            errorElements.forEach(err => err.textContent = '');
+            roundedResultContainer.textContent = '';
+        }
+        
+    
         function divideAndRound(dividend, divisor) {
+            if (divisor === 0n) throw new Error("Деление на ноль!");
+            
             const sign = (dividend < 0n) !== (divisor < 0n) ? -1n : 1n;
             let num = dividend < 0n ? -dividend : dividend;
             let den = divisor < 0n ? -divisor : divisor;
 
-           
             let quotient = num / den;
             let remainder = num % den;
 
@@ -211,61 +233,7 @@
             return sign * quotient;
         }
 
-        function parseToScaledBigInt(str, errorElement) {
-            let input = str.trim();
-            
-            if (!input) {
-                errorElement.textContent = "Поле не может быть пустым";
-                return null;
-            }
-
-            const strictRegex = /^-?(?:(\d{1,3}(?: \d{3})*)|(\d+))([.,]\d+)?$/;
-
-            if (!strictRegex.test(input)) {
-                // Дополнительная проверка для уточнения ошибки пользователю
-                if (/[a-zA-Z]/.test(input)) {
-                    errorElement.textContent = "Ввод букв запрещен";
-                } else if (input.includes('e') || input.includes('E')) {
-                    errorElement.textContent = "Экспоненциальная запись запрещена";
-                } else {
-                    errorElement.textContent = "Некорректный формат (проверьте пробелы)";
-                }
-                return null;
-            }
-
-            input = input.replace(/\s/g, '').replace(',', '.');
-
-            // Проверка на "странные" минусы внутри (на всякий случай, хотя regex выше это ловит)
-            if (input.lastIndexOf('-') > 0) {
-                 errorElement.textContent = "Некорректный формат";
-                 return null;
-            }
-
-            const isNegative = input.startsWith('-');
-            if (isNegative) input = input.substring(1);
-
-            let [integerPart, fractionalPart] = input.split('.');
-            integerPart = integerPart || '0';
-            fractionalPart = (fractionalPart || '').substring(0, SCALE).padEnd(SCALE, '0');
-            
-            const fullNumStr = integerPart + fractionalPart;
-            
-            // Грубая проверка длины строки перед BigInt (13 целых + 6 дробных = 19)
-            if (fullNumStr.length > 20) { // С запасом, точная проверка ниже
-                 errorElement.textContent = "Число слишком большое";
-                 return null;
-            }
-
-            let value = BigInt(fullNumStr);
-
-            if (value > MAX_ABS_VALUE) {
-                 errorElement.textContent = "Число превышает диапазон (1 трлн)";
-                 return null;
-            }
-
-            return isNegative ? -value : value;
-        }
-
+    
         function formatFromScaledBigInt(value) {
             const isNegative = value < 0n;
             let absValueStr = (isNegative ? -value : value).toString();
@@ -278,7 +246,7 @@
             integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
 
             fractionalPart = fractionalPart.replace(/0+$/, '');
-
+            
             const sign = isNegative ? '-' : '';
 
             if (fractionalPart.length === 0) {
@@ -288,11 +256,178 @@
             }
         }
 
-        function clearErrors() {
-            error1.textContent = '';
-            error2.textContent = '';
-            errorResult.textContent = '';
+        function roundToInteger(value, method) {
+            const isNegative = value < 0n;
+            const absValue = isNegative ? -value : value;
+            
+            let integerPart = absValue / SCALE_BI;
+            const fractionalPart = absValue % SCALE_BI;
+            const halfScale = SCALE_BI / 2n;
+            
+            if (method === 'truncate') {
+                return formatInteger(isNegative ? -integerPart : integerPart);
+            }
+
+            if (method === 'mathematical') {
+                if (fractionalPart >= halfScale) {
+                    integerPart += 1n;
+                }
+                return formatInteger(isNegative ? -integerPart : integerPart);
+            }
+
+            if (method === 'bankers') {
+                if (fractionalPart === halfScale) {
+                    if (integerPart % 2n !== 0n) {
+                        integerPart += 1n;
+                    }
+                } else if (fractionalPart > halfScale) {
+                    integerPart += 1n;
+                } 
+
+                return formatInteger(isNegative ? -integerPart : integerPart);
+            }
         }
+        
+        function formatInteger(value) {
+            const sign = value < 0n ? '-' : '';
+            const absValueStr = (value < 0n ? -value : value).toString();
+            const formattedInt = absValueStr.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+            return sign + formattedInt;
+        }
+
+        
+        function parseToScaledBigInt(str, errorElement) {
+            let input = str.trim();
+            if (!input) {
+                errorElement.textContent = "Поле не может быть пустым";
+                return null;
+            }
+
+            const strictRegex = /^-?(?:(\d{1,3}(?: \d{3})*)|(\d+))([.,]\d+)?$/;
+
+            if (!strictRegex.test(input) || input.includes('e') || input.includes('E')) {
+                errorElement.textContent = "Некорректный формат (проверьте пробелы, E-нотацию)";
+                return null;
+            }
+            if (input === "-" || input === ".") {
+                errorElement.textContent = "Некорректный формат числа";
+                return null;
+            }
+            if (input.lastIndexOf('-') > 0) {
+                errorElement.textContent = "Некорректный формат";
+                return null;
+            }
+
+            input = input.replace(/\s/g, '').replace(',', '.');
+
+            const isNegative = input.startsWith('-');
+            if (isNegative) input = input.substring(1);
+
+            let [integerPart, fractionalPart] = input.split('.');
+            integerPart = integerPart || '0';
+
+            const MAX_INPUT_DECIMALS = 6; 
+            
+            fractionalPart = (fractionalPart || '')
+                             .substring(0, MAX_INPUT_DECIMALS)
+                             .padEnd(SCALE, '0');        
+            
+            const fullNumStr = integerPart + fractionalPart;
+            
+            let value = BigInt(fullNumStr);
+
+            if (value >= MAX_ABS_VALUE) { 
+                errorElement.textContent = "Число превышает допустимый диапазон (± 1 трлн)";
+                return null;
+            }
+
+            return isNegative ? -value : value;
+        }
+        
+        function performOperation(op, val1, val2) {
+            let result;
+            switch (op) {
+                case 'add':
+                    result = val1 + val2;
+                    break;
+                case 'subtract':
+                    result = val1 - val2;
+                    break;
+                case 'multiply':
+                    result = divideAndRound(val1 * val2, SCALE_BI);
+                    break;
+                case 'divide':
+                    if (val2 === 0n) throw new Error("Деление на ноль!");
+                    result = divideAndRound(val1 * SCALE_BI, val2);
+                    break;
+                default:
+                    throw new Error("Неизвестная операция");
+            }
+
+            if (result >= MAX_ABS_VALUE || result <= -MAX_ABS_VALUE) {
+                throw new Error("Переполнение промежуточного вычисления");
+            }
+            
+            return result;
+        }
+
+
+        calculateBtn.addEventListener('click', () => {
+    clearErrors();
+    resultContainer.textContent = '';
+    roundedResultContainer.textContent = '';
+    finalResultBigInt = 0n; 
+    try {
+        const values = numInputs.map((input, index) => 
+            parseToScaledBigInt(input.value, errorElements[index])
+        );
+        const ops = opSelects.map(select => select.value);
+
+        if (values.includes(null)) return;
+        
+        const [valA, valB, valC, valD] = values;
+        const [op1, op2, op3] = ops;
+        const resultX = performOperation(op2, valB, valC, "в скобках (Оп2)");
+
+        
+        let val1 = valA;
+        let val2 = resultX;
+        let val3 = valD;
+        
+        let currentResult;
+        
+        if (op1 === 'multiply' || op1 === 'divide') {
+            currentResult = performOperation(op1, val1, val2, "Оп1 (* или /)");
+            
+            finalResultBigInt = performOperation(op3, currentResult, val3, "Оп3 (финальная)");
+            
+        } else if (op3 === 'multiply' || op3 === 'divide') {
+            const resultY = performOperation(op3, val2, val3, "Оп3 (* или /)");
+            
+            finalResultBigInt = performOperation(op1, val1, resultY, "Оп1 (+ или -), финальная");
+            
+        } else {
+            currentResult = performOperation(op1, val1, val2, "Оп1 (+ или -)");
+            finalResultBigInt = performOperation(op3, currentResult, val3, "Оп3 (+ или -), финальная");
+        }
+
+        resultContainer.textContent = formatFromScaledBigInt(finalResultBigInt);
+
+        const method = roundingMethodSelect.value;
+        roundedResultContainer.textContent = roundToInteger(finalResultBigInt, method);
+
+    } catch (error) {
+        errorResult.textContent = error.message;
+        roundedResultContainer.textContent = '';
+    }
+});
+        roundingMethodSelect.addEventListener('change', () => {
+            if (finalResultBigInt !== 0n && resultContainer.textContent) {
+                const method = roundingMethodSelect.value;
+                roundedResultContainer.textContent = roundToInteger(finalResultBigInt, method);
+            }
+        });
+
     </script>
 </body>
 </html>
